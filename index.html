@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Opening…</title>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body { display: flex; align-items: center; justify-content: center;
+         font-family: Arial, Helvetica, sans-serif; font-size: 15px;
+         color: #1f2937; background: #f6f7f9; }
+  a { color: #0b57d0; }
+</style>
+</head>
+<body>
+<p id="msg">Opening in Google Drive…</p>
+<noscript><p>Please enable JavaScript to open this link.</p></noscript>
+<script>
+(function () {
+  // Deishire shared-file links: c = link code, f = Google Drive file/folder ID,
+  // k = "d" for a folder. Records the click, then opens the Drive item.
+  var TRACKER = 'https://script.google.com/macros/s/AKfycbwEC5Uj0t9Hfpbl9sGLR4PFWkL8zKjgK6E0U9KM4zbrIRU5TphCbzeBuxqv0Idptm4I/exec';
+  var msg = document.getElementById('msg');
+  var q = new URLSearchParams(window.location.search);
+  var code = q.get('c') || '';
+  var id = q.get('f') || '';
+  var folder = q.get('k') === 'd';
+
+  // Only Drive IDs are accepted, so this page cannot send anyone elsewhere.
+  if (!/^[A-Za-z0-9_-]{10,100}$/.test(id)) {
+    msg.textContent = 'This link is incomplete. Please check the link you received.';
+    return;
+  }
+  var dest = folder ? 'https://drive.google.com/drive/folders/' + id
+                    : 'https://drive.google.com/file/d/' + id + '/view';
+
+  // The click is recorded with no cookies (credentials: 'omit'), so it does not
+  // matter whether the viewer is signed in to Google, or to how many accounts.
+  var logged = Promise.resolve();
+  if (/^[a-z0-9]{2,20}$/.test(code)) {
+    try {
+      logged = fetch(TRACKER + '?log=' + encodeURIComponent(code), {
+        mode: 'no-cors', credentials: 'omit', cache: 'no-store', keepalive: true
+      }).catch(function () {});
+    } catch (e) { logged = Promise.resolve(); }
+  }
+  var go = function () { window.location.replace(dest); };
+  var wait = new Promise(function (r) { setTimeout(r, 1500); });
+  Promise.race([logged, wait]).then(go, go);
+
+  // If the browser blocks the automatic redirect, offer a plain link.
+  setTimeout(function () {
+    msg.innerHTML = '';
+    var a = document.createElement('a');
+    a.href = dest; a.textContent = 'Open in Google Drive';
+    msg.appendChild(a);
+  }, 5000);
+})();
+</script>
+</body>
+</html>
